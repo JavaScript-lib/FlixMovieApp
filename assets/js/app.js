@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////////
-// Variables For App
+// Global Variables For App
 ////////////////////////////////////////////////////////////////////
 const global = {
     currentPage: window.location.pathname,
 };
 ////////////////////////////////////////////////////////////////////
-// Functions For App
+// Crud Functions For App
 ////////////////////////////////////////////////////////////////////
 const displayPopularMovies = async () => {
     const {results} = await fetchAPIData('movie/popular');
@@ -36,6 +36,86 @@ const displayPopularMovies = async () => {
         document.querySelector('#popular-movies').appendChild(div);
     });
 }
+const displayPopularTvShows = async () => {
+    const {results} = await fetchAPIData('tv/popular');
+    results.forEach((show) => {
+        const div = document.createElement('div');
+        div.classList.add('card');
+        div.innerHTML = `<div class="card">
+          <a href="tv-details.html?id=${show.id}">
+            ${
+                show.poster_path ?
+                `<img
+                    src="https://image.tmdb.org/t/p/w500${show.poster_path}" 
+                    class="card-img-top"
+                    alt="${show.name}"/>` : 
+                `<img 
+                    src="../img/no-image.jpg" 
+                    class="card-img-top" 
+                    alt="${show.name}"/>`
+            }
+          </a>
+          <div class="card-body">
+            <h5 class="card-title">${show.name}</h5>
+            <p class="card-text">
+              <small class="text-muted">Air Date:  ${show.first_aired_date}</small>
+            </p>
+          </div>
+        </div>`;
+        document.querySelector('#popular-shows').appendChild(div);
+    });
+}
+const displayMovieDetails = async () => {
+    const movieId = window.location.search.split('=')[1];
+    const movie = await fetchAPIData(`movie/${movieId}`);
+    displayBackgroundImage('movie', movie.backdrop_path);
+    const div = document.createElement('div');
+    div.innerHTML = `
+        <div class="details-top">
+          <div>
+            ${
+                movie.poster_path ?
+                `<img
+                    src="https://image.tmdb.org/t/p/w500${movie.poster_path}" 
+                    class="card-img-top"
+                    alt="${movie.title}"/>` : 
+                `<img 
+                    src="../img/no-image.jpg" 
+                    class="card-img-top" 
+                    alt="${movie.title}"/>`
+            }
+          </div>
+          <div>
+            <h2>${movie.title}</h2>
+            <p>
+              <i class="fas fa-star text-primary"></i>
+              ${movie.vote_average.toFixed(1)} / 10
+            </p>
+            <p class="text-muted">Release Date: ${movie.release_date}</p>
+            <p>
+              ${movie.overview}
+            </p>
+            <h5>Genres</h5>
+            <ul class="list-group">
+              ${movie.genres.map((genre) => `<li>${genre.name}</li>`).join('')}
+            </ul>
+            <a href="${movie.homepage}" target="_blank" class="btn">Visit Movie Homepage</a>
+          </div>
+        </div>
+        <div class="details-bottom">
+          <h2>Movie Info</h2>
+          <ul>
+            <li><span class="text-secondary">Budget:</span> $${addCommasToNumber(movie.budget)}</li>
+            <li><span class="text-secondary">Revenue:</span> $${addCommasToNumber(movie.revenue)}</li>
+            <li><span class="text-secondary">Runtime:</span> ${movie.runtime} minutes</li>
+            <li><span class="text-secondary">Status:</span> ${movie.status}</li>
+          </ul>
+          <h4>Production Companies</h4>
+          <div class="list-group">${movie.production_companies.map((company) => `<span>${company.name}</span>`).join('')}</div>
+        </div>
+    `;
+    document.querySelector('#movie-details').appendChild(div);
+}
 const fetchAPIData = async (endpoint) => {
     const API_KEY = 'ac428061577a1f4a80910af3ccf8610f';
     const API_URL = 'https://api.themoviedb.org/3/';
@@ -45,6 +125,9 @@ const fetchAPIData = async (endpoint) => {
     hideSpinner();
     return data;
 }
+////////////////////////////////////////////////////////////////////
+// Helper Functions For App
+////////////////////////////////////////////////////////////////////
 const showSpinner = () => {
     document.querySelector('.spinner').classList.add('show');
 }
@@ -59,6 +142,28 @@ const highlightActiveLink = () => {
         }
     });
 }
+const addCommasToNumber = (number) => {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+const displayBackgroundImage = (type, backgroundPath) => {
+    const overlay = document.createElement('div');
+    overlay.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${backgroundPath})`;
+    overlay.style.backgroundSize = 'cover';
+    overlay.style.backgroundPosition = 'center';
+    overlay.style.backgroundRepeat = 'no-repeat';
+    overlay.style.height = '100vh';
+    overlay.style.width = '100vw';
+    overlay.style.position = 'absolute';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.zIndex = '-1';
+    overlay.style.opacity = '0.1';
+    if(type === 'movie') {
+        document.querySelector('#movie-details').appendChild(overlay);
+    } else {
+        document.querySelector('#show-details').appendChild(overlay);
+    }
+}
 ////////////////////////////////////////////////////////////////////
 // Initializer And Router For App
 ////////////////////////////////////////////////////////////////////
@@ -66,14 +171,13 @@ const init = () => {
     switch(global.currentPage) {
         case '/':
         case '/index.html':
-            console.log('Home');
             displayPopularMovies();
             break;
         case '/shows.html':
-            console.log('Shows');
+            displayPopularTvShows();
             break;
         case '/movie-details.html':
-            console.log('Details');
+            displayMovieDetails();
             break;
         case '/tv-details.html':
             console.log('Details');
