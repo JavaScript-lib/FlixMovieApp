@@ -39,9 +39,17 @@ const displayPopularMovies = async () => {
 const fetchAPIData = async (endpoint) => {
     const API_KEY = 'ac428061577a1f4a80910af3ccf8610f';
     const API_URL = 'https://api.themoviedb.org/3/';
+    showSpinner();
     const response = await fetch(`${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US`);
     const data = await response.json();
+    hideSpinner();
     return data;
+}
+const showSpinner = () => {
+    document.querySelector('.spinner').classList.add('show');
+}
+const hideSpinner = () => {
+    document.querySelector('.spinner').classList.remove('show');
 }
 const highlightActiveLink = () => {
     const links = document.querySelectorAll('.nav-link');
